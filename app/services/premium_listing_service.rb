@@ -18,6 +18,15 @@ class PremiumListingService
       raise 'Failed to create premium listing'
     end
   end
+  def create_premium_listings
+    vip_users = User.where(is_vip: true)
+    premium_listings = []
+    vip_users.each do |user|
+      premium_listing = PremiumListing.create(user_id: user.id, listing_date: Date.today)
+      premium_listings << {user_id: user.id, listing_date: premium_listing.listing_date} if premium_listing.persisted?
+    end
+    premium_listings
+  end
   def delete_premium_listing(id)
     raise 'Wrong format' unless id.is_a? Integer
     premium_listing = PremiumListing.find_by(id: id)
