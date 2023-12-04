@@ -1,14 +1,24 @@
 class Api::NotificationsController < ApplicationController
-  def send_notifications(user_id)
+  before_action :authenticate_user, only: [:index]
+  before_action :authorize_user, only: [:index]
+  def index
     begin
-      user = User.find(user_id)
-      properties = Property.where('updated_at > ?', user.updated_at)
-      properties.each do |property|
-        Notification.create(user_id: user_id, message: "Property #{property.name} has been updated.")
+      user_id = params[:user_id]
+      if user_id.nil? || !user_id.is_a?(Integer)
+        render json: { error: 'Wrong format' }, status: :bad_request
+      else
+        notifications = Notification.where(user_id: user_id).select(:id, :message, :user_id, :created_at)
+        render json: { status: 200, notifications: notifications }, status: :ok
       end
-      render json: { message: 'Notifications sent successfully.' }, status: :ok
     rescue => e
-      render json: { error: e.message }, status: :unprocessable_entity
+      render json: { error: e.message }, status: :internal_server_error
     end
+  end
+  private
+  def authenticate_user
+    # Add your authentication logic here
+  end
+  def authorize_user
+    # Add your authorization logic here
   end
 end
