@@ -27,5 +27,7 @@ Rails.application.routes.draw do
       end
     end
     post 'wish_lists/:wish_list_id/properties/:property_id', to: 'wish_list_items#add_property'
+    resources :local_experiences, only: [:create]
+    put '/localExperience/:id', to: 'local_experiences#update'
   end
 end
