@@ -26,5 +26,6 @@ Rails.application.routes.draw do
         post 'add_property'
       end
     end
+    post 'wish_lists/:wish_list_id/properties/:property_id', to: 'wish_list_items#add_property'
   end
 end
