@@ -1,55 +1,23 @@
 class Api::WishListsController < ApplicationController
-  before_action :authenticate_user!, only: [:share, :create, :share_wish_list]
-  before_action :authorize_user!, only: [:create]
-  def create
-    validator = WishListValidator.new(wish_list_params)
-    unless validator.valid?
-      render json: { errors: validator.errors.full_messages }, status: :bad_request
+  before_action :authenticate_user!, only: [:share, :create, :share_wish_list, :update_wish_list]
+  before_action :authorize_user!, only: [:create, :update_wish_list]
+  def update_wish_list
+    wish_list_id = params[:wish_list_id]
+    property_id = params[:property_id]
+    unless WishList.exists?(wish_list_id) && Property.exists?(property_id)
+      render json: { message: 'Invalid wish list or property id' }, status: :bad_request
       return
     end
     begin
-      wish_list = WishListService.create_wish_list(wish_list_params)
-      render json: { status: 200, wish_list: wish_list }, status: :ok
+      if WishListService.property_in_wish_list?(wish_list_id, property_id)
+        WishListService.remove_property(wish_list_id, property_id)
+      else
+        WishListService.add_property(wish_list_id, property_id)
+      end
+      updated_wish_list = WishListService.get_wish_list(wish_list_id)
+      render json: { message: 'Wish list updated successfully', wish_list: updated_wish_list }, status: :ok
     rescue => e
       render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
-    end
-  end
-  def share_wish_list
-    wish_list_id = params[:wish_list_id]
-    user_id = params[:user_id]
-    unless WishList.exists?(wish_list_id) && User.exists?(user_id)
-      render json: { message: 'Invalid wish list or user id' }, status: :bad_request
-      return
-    end
-    if SharedWishList.exists?(wish_list_id: wish_list_id, user_id: user_id)
-      render json: { message: 'Wish list already shared with this user' }, status: :bad_request
-      return
-    end
-    shared_wish_list = SharedWishList.create(wish_list_id: wish_list_id, user_id: user_id)
-    if shared_wish_list.persisted?
-      render json: { message: 'Wish list shared successfully', shared_wish_list: shared_wish_list }, status: :ok
-    else
-      render json: { message: 'Failed to share wish list', errors: shared_wish_list.errors.full_messages }, status: :internal_server_error
-    end
-  rescue => e
-    render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
-  end
-  def share
-    id = params[:id]
-    email = params[:email]
-    unless id.is_a?(Integer) && email =~ URI::MailTo::EMAIL_REGEXP
-      render json: { message: 'Wrong format' }, status: :unprocessable_entity
-      return
-    end
-    unless WishList.exists?(id)
-      render json: { message: 'This wish list is not found' }, status: :bad_request
-      return
-    end
-    begin
-      WishListService.new.share(id, email)
-      render json: { message: 'Wish list was successfully shared.' }, status: :ok
-    rescue => e
-      render json: { message: 'Failed to share wish list', error: e.message }, status: :internal_server_error
     end
   end
   private
