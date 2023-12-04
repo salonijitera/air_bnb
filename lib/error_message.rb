@@ -23,4 +23,8 @@ module ErrorMessage
   IMAGE_NOT_FILE = "Wrong file format."
   LOCAL_EXPERIENCE_NOT_FOUND = "This local experience is not found."
   ID_NOT_NUMBER = "Wrong format."
+  PREMIUM_LISTING_NOT_FOUND = "This premium listing is not found"
+  USER_NOT_AUTHENTICATED = "User is not authenticated."
+  USER_NO_PERMISSION = "User does not have permission to access the resource."
+  SERVER_ERROR = "An unexpected error occurred on the server."
 end
