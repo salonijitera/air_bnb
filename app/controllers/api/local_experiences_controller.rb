@@ -1,5 +1,5 @@
 class Api::LocalExperiencesController < ApplicationController
-  before_action :authenticate_user!, only: [:create, :destroy]
+  before_action :authenticate_user!, only: [:create, :destroy, :update]
   before_action :authorize_user!, only: [:destroy]
   def create
     validator = LocalExperienceValidator.new(local_experience_params)
@@ -15,6 +15,24 @@ class Api::LocalExperiencesController < ApplicationController
     begin
       local_experience = LocalExperience.create!(local_experience_params.merge(location_id: location.id))
       render json: { status: 200, message: "Local experience was successfully created.", localExperience: local_experience }, status: 200
+    rescue => e
+      render json: { error: e.message }, status: 500
+    end
+  end
+  def update
+    validator = LocalExperienceValidator.new(local_experience_params)
+    unless validator.valid?
+      render json: { error: validator.errors.full_messages }, status: 422
+      return
+    end
+    local_experience = LocalExperience.find_by(id: params[:id])
+    unless local_experience
+      render json: { error: "This local experience is not found." }, status: 404
+      return
+    end
+    begin
+      local_experience.update!(local_experience_params)
+      render json: { status: 200, message: "Local experience was successfully updated.", localExperience: local_experience }, status: 200
     rescue => e
       render json: { error: e.message }, status: 500
     end
