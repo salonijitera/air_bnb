@@ -1,4 +1,5 @@
 class Api::UsersController < ApplicationController
+  before_action :authorize, only: [:check_vip_status]
   def create
     @user = User.new(user_params)
     if @user.valid?
@@ -12,6 +13,14 @@ class Api::UsersController < ApplicationController
       end
     else
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+  def check_vip_status
+    user = User.find_by(id: params[:user_id])
+    if user.nil?
+      render json: { error: 'User not found' }, status: :not_found
+    else
+      render json: { is_vip: user.is_vip }, status: :ok
     end
   end
   def count_user_bookings
