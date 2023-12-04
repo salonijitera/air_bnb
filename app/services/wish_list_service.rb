@@ -37,4 +37,17 @@ class WishListService
       return { status: 500, error: e.message }
     end
   end
+  def share(id, email)
+    begin
+      raise "Wrong format" unless id.is_a? Integer
+      wish_list = WishList.find(id)
+      raise "Invalid email format." unless email =~ /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
+      WishListMailer.share(wish_list, email).deliver_now
+      return { status: 200, message: "Wish list was successfully shared." }
+    rescue ActiveRecord::RecordNotFound
+      return { status: 400, error: "This wish list is not found" }
+    rescue Exception => e
+      return { status: 500, error: e.message }
+    end
+  end
 end

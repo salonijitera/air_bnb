@@ -35,11 +35,25 @@ class Api::WishListsController < ApplicationController
     render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
   end
   def share
-    # ... existing code ...
+    id = params[:id]
+    email = params[:email]
+    unless id.is_a?(Integer) && email =~ URI::MailTo::EMAIL_REGEXP
+      render json: { message: 'Wrong format' }, status: :unprocessable_entity
+      return
+    end
+    unless WishList.exists?(id)
+      render json: { message: 'This wish list is not found' }, status: :bad_request
+      return
+    end
+    begin
+      WishListService.new.share(id, email)
+      render json: { message: 'Wish list was successfully shared.' }, status: :ok
+    rescue => e
+      render json: { message: 'Failed to share wish list', error: e.message }, status: :internal_server_error
+    end
   end
   private
   def wish_list_params
     params.require(:wish_list).permit(:name, :user_id)
   end
-  # ... rest of the code ...
 end
