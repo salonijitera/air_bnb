@@ -5,11 +5,11 @@ class Api::NotificationsController < ApplicationController
     begin
       user_id = params[:user_id].to_i
       if user_id <= 0
-        render json: { error: 'Wrong format' }, status: :bad_request
+        render json: { error: 'Wrong format' }, status: :unprocessable_entity
       else
         user = User.find_by(id: user_id)
         if user.nil?
-          render json: { error: 'User not found' }, status: :not_found
+          render json: { error: 'This user is not found' }, status: :bad_request
         else
           notifications = Notification.where(user_id: user_id).select(:id, :message, :status, :created_at)
           render json: { status: 200, notifications: notifications }, status: :ok
@@ -23,11 +23,11 @@ class Api::NotificationsController < ApplicationController
     begin
       user_id = params[:user_id].to_i
       if user_id <= 0
-        render json: { error: 'Wrong format' }, status: :bad_request
+        render json: { error: 'Wrong format' }, status: :unprocessable_entity
       else
         user = User.find_by(id: user_id)
         if user.nil?
-          render json: { error: 'User not found' }, status: :not_found
+          render json: { error: 'This user is not found' }, status: :bad_request
         else
           notifications = Notification.where(user_id: user_id).select(:id, :message, :status, :created_at)
           render json: { status: 200, notifications: notifications }, status: :ok
