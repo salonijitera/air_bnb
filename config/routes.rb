@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   root to: 'static_pages#root'
   namespace :api, defaults: {format: :json} do
-    resources :users, only: [:create, :index, :show]
+    resources :users, only: [:create, :index, :show] do
+      get 'vip_status', on: :member
+    end
     resources :listings, only: [:show, :index]
     resources :reviews, only: [:index]
     resources :bookings, only: [:index, :show, :create, :destroy, :update]
