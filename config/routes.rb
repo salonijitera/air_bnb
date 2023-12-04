@@ -16,7 +16,7 @@ Rails.application.routes.draw do
       end
     end
     resource :session, only: [:create, :destroy]
-    resources :notifications, only: [] do
+    resources :notifications, only: [:index] do
       collection do
         get 'get_notifications'
       end
