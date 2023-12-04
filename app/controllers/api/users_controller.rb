@@ -14,6 +14,16 @@ class Api::UsersController < ApplicationController
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
     end
   end
+  def count_user_bookings
+    user = User.find_by(id: params[:user_id])
+    if user
+      bookings_count = Booking.where(user_id: params[:user_id]).count
+      eligible_for_premium = bookings_count >= 10
+      render json: { bookings_count: bookings_count, eligible_for_premium: eligible_for_premium }
+    else
+      render json: { error: 'User not found' }, status: :not_found
+    end
+  end
   private
   def user_params
     params.require(:user).permit(:name, :email, :location)
