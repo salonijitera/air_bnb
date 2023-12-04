@@ -4,12 +4,16 @@ class PremiumListingService
     @user = User.find_by(id: user_id)
     raise 'This user is not found' unless @user
   end
-  def create_premium_listing(listing_name, listing_status)
-    raise 'Invalid input' unless listing_name.is_a?(String) && PremiumListing.statuses.include?(listing_status)
-    premium_listing = PremiumListing.create(name: listing_name, status: listing_status, user_id: @user.id)
+  def create_premium_listing(title, description, price, status, posted_date)
+    raise 'The title is required.' if title.blank?
+    raise 'The description is required.' if description.blank?
+    raise 'The price must be a number.' unless price.is_a?(Numeric)
+    raise 'The status is not valid.' unless PremiumListing.statuses.include?(status)
+    raise 'The posted_date is not a valid date.' unless posted_date.is_a?(Date)
+    premium_listing = PremiumListing.create(title: title, description: description, price: price, status: status, posted_date: posted_date, user_id: @user.id)
     if premium_listing.persisted?
       send_premium_listing_creation_notification(premium_listing)
-      return premium_listing.id
+      return {status: 200, premium_listing: premium_listing}
     else
       raise 'Failed to create premium listing'
     end

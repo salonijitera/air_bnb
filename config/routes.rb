@@ -32,5 +32,6 @@ Rails.application.routes.draw do
     post '/listings/premium', to: 'listings#create_premium_listing'
     resources :premium_listings, only: [:create]
     delete '/premium_listing/:id', to: 'premium_listings#destroy'
+    post '/api/premium_listings', to: 'premium_listings#create'
   end
 end
