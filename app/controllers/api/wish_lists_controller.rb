@@ -1,9 +1,9 @@
 class Api::WishListsController < ApplicationController
-  before_action :authenticate_user!, only: [:share, :share_wish_list]
+  before_action :authenticate_user!, only: [:share, :create, :share_wish_list]
   def create
-    user = User.find_by_id(params[:user_id])
+    user = User.find_by_id(params[:user_id]) || current_user
     if user
-      wish_list = user.wish_list.new(name: params[:name])
+      wish_list = user.wish_lists.new(name: params[:name])
       if wish_list.save
         render json: { status: 200, message: 'Wish list created successfully', wish_list: wish_list }, status: :created
       else
@@ -14,6 +14,24 @@ class Api::WishListsController < ApplicationController
     end
   rescue => e
     render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
+  end
+  def share
+    wish_list = WishList.find_by_id(params[:id])
+    email = params[:email]
+    if wish_list.nil?
+      render json: { message: 'This wish list is not found' }, status: :unprocessable_entity
+    elsif !params[:id].to_s.match(/\A[+-]?\d+?(\.\d+)?\Z/)
+      render json: { message: 'Wrong format' }, status: :unprocessable_entity
+    elsif email.blank? || !email.match(/\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i)
+      render json: { message: 'Invalid email format.' }, status: :unprocessable_entity
+    else
+      begin
+        WishListSharingService.shareWishList(wish_list.id, email)
+        render json: { status: 200, message: 'Wish list was successfully shared.' }, status: :ok
+      rescue => e
+        render json: { message: 'Failed to share wish list', error: e.message }, status: :internal_server_error
+      end
+    end
   end
   def share_wish_list
     wish_list = WishList.find_by_id(params[:wish_list_id])
