@@ -7,11 +7,19 @@ class Api::NotificationsController < ApplicationController
       if user_id.nil? || !user_id.is_a?(Integer)
         render json: { error: 'Wrong format' }, status: :bad_request
       else
-        notifications = Notification.where(user_id: user_id)
-        if notifications.empty?
-          render json: { error: 'This user is not found' }, status: :not_found
+        user = User.find(user_id)
+        if user.nil?
+          render json: { error: 'User not found' }, status: :not_found
         else
-          render json: { status: 200, notifications: notifications }, status: :ok
+          notifications = Notification.where(user_id: user_id)
+          if notifications.empty?
+            render json: { error: 'No notifications found for this user' }, status: :not_found
+          else
+            notifications.each do |notification|
+              notification.update(status: 'read')
+            end
+            render json: { status: 200, notifications: notifications.as_json(only: [:id, :message, :status]) }, status: :ok
+          end
         end
       end
     rescue => e
