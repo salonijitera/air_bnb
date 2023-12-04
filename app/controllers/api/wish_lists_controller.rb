@@ -14,7 +14,27 @@ class Api::WishListsController < ApplicationController
       render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
     end
   end
-  # Other methods...
+  def share
+    wish_list_id = params[:wish_list_id]
+    user_id = params[:user_id]
+    wish_list = WishList.find_by(id: wish_list_id)
+    user = User.find_by(id: user_id)
+    unless wish_list && user
+      render json: { message: 'Wish list or user not found' }, status: :not_found
+      return
+    end
+    if wish_list.collaborators.include?(user)
+      render json: { message: 'User is already a collaborator' }, status: :bad_request
+      return
+    end
+    begin
+      wish_list.add_collaborator(user)
+      NotificationsController.new.send_notification(user, "You have been added as a collaborator to the wish list #{wish_list.name}")
+      render json: { status: 200, wish_list: { id: wish_list.id, name: wish_list.name, collaborators: wish_list.collaborators } }, status: :ok
+    rescue => e
+      render json: { message: 'Failed to share wish list', error: e.message }, status: :internal_server_error
+    end
+  end
   private
   def wish_list_params
     params.require(:wish_list).permit(:name, :user_id)
