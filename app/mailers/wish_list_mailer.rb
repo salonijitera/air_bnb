@@ -1,18 +1,9 @@
 class WishListMailer < ApplicationMailer
   default from: 'notifications@example.com'
-  def share_wish_list_email(user, wish_list)
-    @user = user
+  def wish_list_created(wish_list)
     @wish_list = wish_list
+    @user = @wish_list.user
     @url  = wish_list_url(@wish_list)
-    mail(to: @user.email, subject: 'Shared Wish List')
-  end
-  def share_wish_list(wish_list, email)
-    @wish_list = wish_list
-    @url  = wish_list_url(@wish_list)
-    begin
-      mail(to: email, subject: 'Shared Wish List')
-    rescue Exception => e
-      raise "Failed to send email: #{e.message}"
-    end
+    mail(to: @user.email, subject: 'Wish List Created', body: "Your wish list #{@wish_list.name} has been created successfully.")
   end
 end
