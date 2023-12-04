@@ -2,6 +2,17 @@ class Api::PremiumListingsController < ApplicationController
   before_action :authenticate_user!
   before_action :authorize_user, only: [:destroy, :update, :update_premium_status]
   before_action :validate_params, only: [:destroy, :update, :update_premium_status]
+  def retrieve_vip_listings
+    user_id = params[:user_id]
+    @premium_listings = PremiumListing.where(user_id: user_id)
+    if @premium_listings.empty?
+      render json: { message: 'No premium listings found for this user.' }, status: :not_found
+    else
+      render json: @premium_listings, each_serializer: PremiumListingSerializer
+    end
+  rescue => e
+    render json: { error: e.message }, status: :internal_server_error
+  end
   def update_premium_status
     user_id = params[:user_id]
     is_premium = params[:is_premium]
