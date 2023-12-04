@@ -1,5 +1,5 @@
 class Api::WishListsController < ApplicationController
-  before_action :authenticate_user!, only: [:create]
+  before_action :authenticate_user!, only: [:share, :create, :share_wish_list]
   before_action :authorize_user!, only: [:create]
   def create
     user_id = params[:user_id]
@@ -35,5 +35,41 @@ class Api::WishListsController < ApplicationController
       render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
     end
   end
-  # ... rest of the code
+  def share_wish_list
+    # ... existing code ...
+  end
+  def share
+    if params[:id].to_i.to_s != params[:id]
+      render json: { message: 'Wrong format' }, status: :bad_request
+      return
+    end
+    if params[:email] !~ URI::MailTo::EMAIL_REGEXP
+      render json: { message: 'Invalid email format.' }, status: :bad_request
+      return
+    end
+    wish_list = WishList.find_by_id(params[:id])
+    if wish_list.nil?
+      render json: { message: 'This wish list is not found' }, status: :not_found
+      return
+    end
+    user = User.find_by_email(params[:email])
+    if user.nil?
+      render json: { message: 'User not found' }, status: :not_found
+      return
+    end
+    if wish_list.user_id != current_user.id
+      render json: { message: 'You do not have permission to share this wish_list' }, status: :forbidden
+      return
+    end
+    shared_wish_list = SharedWishList.create(wish_list_id: wish_list.id, user_id: user.id)
+    if shared_wish_list.persisted?
+      ApplicationMailer.share_wish_list_email(user, wish_list).deliver_now
+      render json: { status: 200, message: 'Wish list was successfully shared.' }, status: :ok
+    else
+      render json: { message: 'Failed to share wish list' }, status: :unprocessable_entity
+    end
+  rescue => e
+    render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
+  end
+  # ... rest of the code ...
 end
