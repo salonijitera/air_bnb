@@ -1,4 +1,5 @@
 class Api::BookingsController < ApplicationController
+  before_action :authenticate_user!
   def index
     @bookings = Booking.includes(:listing)
                   .where(user_id: current_user.id)
@@ -11,17 +12,17 @@ class Api::BookingsController < ApplicationController
   end
   def create
     return render json: { error: 'Unauthorized' }, status: 401 unless user_signed_in?
-    return render json: { error: 'Wrong format' }, status: 422 unless params[:property_id].is_a?(Integer) && params[:user_id].is_a?(Integer)
-    unless User.exists?(params[:user_id]) && Property.exists?(params[:property_id])
+    return render json: { error: 'Wrong format' }, status: 422 unless params[:id].is_a?(Integer) && params[:user_id].is_a?(Integer)
+    unless User.exists?(params[:user_id]) && Property.exists?(params[:id])
       return render json: { error: 'Invalid user or property id' }, status: 404
     end
-    property = Property.find_by(id: params[:property_id])
+    property = Property.find_by(id: params[:id])
     user = User.find_by(id: params[:user_id])
     if property.availability == false
       render json: { error: 'Property is not available' }, status: 400
     else
       property.update(availability: false)
-      @booking = Booking.new(user_id: user.id, listing_id: property.id)
+      @booking = Booking.new(user_id: user.id, listing_id: property.id, date_from: params[:date_from], date_to: params[:date_to])
       if @booking.save
         render json: { status: 200, message: 'Property successfully booked', booking: @booking }
       else
@@ -46,6 +47,6 @@ class Api::BookingsController < ApplicationController
   end
   private
   def booking_params
-    params.require(:booking).permit(:id, :start_date, :end_date, :num_guests, :listing_id, :user_id)
+    params.require(:booking).permit(:id, :start_date, :end_date, :num_guests, :listing_id, :user_id, :date_from, :date_to)
   end
 end
