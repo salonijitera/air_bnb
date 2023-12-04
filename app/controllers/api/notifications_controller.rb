@@ -4,11 +4,16 @@ class Api::NotificationsController < ApplicationController
   def get_notifications
     begin
       user_id = params[:user_id].to_i
-      if user_id.nil? || !user_id.is_a?(Integer)
+      if user_id <= 0
         render json: { error: 'Wrong format' }, status: :bad_request
       else
-        notifications = Notification.where(user_id: user_id).select(:id, :message, :status, :created_at)
-        render json: { status: 200, notifications: notifications }, status: :ok
+        user = User.find_by(id: user_id)
+        if user.nil?
+          render json: { error: 'User not found' }, status: :not_found
+        else
+          notifications = Notification.where(user_id: user_id).select(:id, :message, :status, :created_at)
+          render json: { status: 200, notifications: notifications }, status: :ok
+        end
       end
     rescue => e
       render json: { error: e.message }, status: :internal_server_error
@@ -17,11 +22,16 @@ class Api::NotificationsController < ApplicationController
   def index
     begin
       user_id = params[:user_id].to_i
-      if user_id.nil? || !user_id.is_a?(Integer)
+      if user_id <= 0
         render json: { error: 'Wrong format' }, status: :bad_request
       else
-        notifications = Notification.where(user_id: user_id).select(:id, :message, :status, :created_at)
-        render json: { status: 200, notifications: notifications }, status: :ok
+        user = User.find_by(id: user_id)
+        if user.nil?
+          render json: { error: 'User not found' }, status: :not_found
+        else
+          notifications = Notification.where(user_id: user_id).select(:id, :message, :status, :created_at)
+          render json: { status: 200, notifications: notifications }, status: :ok
+        end
       end
     rescue => e
       render json: { error: e.message }, status: :internal_server_error
