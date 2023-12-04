@@ -24,6 +24,12 @@ class NotificationService
     send_wishlist_collaborator_notification(wish_list)
     wish_list
   end
+  def send_local_experience_deletion_notification(local_experience_id)
+    message = "Local experience with id #{local_experience_id} has been successfully deleted"
+    notification = Notification.create(user_id: @user.id, message: message, status: 'unread', title: 'Local Experience Deletion')
+    # Assuming we have a mailer setup
+    UserMailer.with(user: @user, local_experience_id: local_experience_id, notification: notification).local_experience_deletion_notification_email.deliver_later
+  end
   private
   def send_wishlist_collaborator_notification(wish_list)
     message = "You have been added as a collaborator to the wish list #{wish_list.name}"
