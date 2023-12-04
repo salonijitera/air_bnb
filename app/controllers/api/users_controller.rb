@@ -4,26 +4,32 @@ class Api::UsersController < ApplicationController
   before_action :validate_params, only: [:update]
   before_action :validate_profile_params, only: [:create_profile, :update_profile]
   def register
-    @user = User.new(user_params)
-    if @user.valid?
-      existing_user = User.find_by_email(user_params[:email])
-      if existing_user
-        render json: { error: 'Email is already registered' }, status: 400
-      else
-        @user.password = BCrypt::Password.create(user_params[:password])
-        if @user.save
-          ApplicationMailer.confirmation_email(@user).deliver_now
-          render json: { status: 200, user: { id: @user.id, username: @user.username, email: @user.email, created_at: @user.created_at } }, status: 201
-        else
-          render json: { error: 'Failed to register user' }, status: 400
-        end
-      end
-    else
-      render json: { error: 'Invalid user parameters' }, status: 400
+    # ... existing code ...
+  end
+  def create_profile
+    begin
+      profile = UserService.create_profile(@user, profile_params)
+      render json: { status: 200, profile: profile }, status: 200
+    rescue Exception => e
+      render json: { error: 'Failed to create profile' }, status: 500
     end
   end
   private
   def user_params
     params.require(:user).permit(:username, :password, :email)
+  end
+  def profile_params
+    params.require(:profile).permit(:first_name, :last_name, :date_of_birth, :profile_picture)
+  end
+  def validate_profile_params
+    params.require(:profile).permit(:first_name, :last_name, :date_of_birth, :profile_picture)
+    render json: { error: 'Invalid profile parameters' }, status: 400 unless params[:profile].present?
+  end
+  def set_user
+    @user = User.find(params[:id])
+    render json: { error: 'User not found' }, status: 404 unless @user
+  end
+  def authorize
+    render json: { error: 'Unauthorized' }, status: 401 unless @user == current_user
   end
 end

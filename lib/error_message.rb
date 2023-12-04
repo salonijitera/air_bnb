@@ -23,4 +23,9 @@ module ErrorMessage
   IMAGE_NOT_FILE = "Wrong file format."
   LOCAL_EXPERIENCE_NOT_FOUND = "This local experience is not found."
   ID_NOT_NUMBER = "Wrong format."
+  FIRST_NAME_BLANK = "The first name is required."
+  LAST_NAME_BLANK = "The last name is required."
+  DATE_OF_BIRTH_BLANK = "The date of birth is not in valid format."
+  PROFILE_PICTURE_BLANK = "Profile picture can't be blank"
+  USER_ID_BLANK = "User ID can't be blank"
 end
