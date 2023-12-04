@@ -18,4 +18,23 @@ class WishListService
       return { status: 500, error: e.message }
     end
   end
+  def add_property_to_wish_list(wish_list_id, property_id)
+    begin
+      wish_list = WishList.find(wish_list_id)
+      property = Property.find(property_id)
+      if wish_list.wish_list_items.find_by(property_id: property.id)
+        raise "Property is already in the wish list"
+      end
+      wish_list_item = wish_list.wish_list_items.create(property: property)
+      if wish_list_item.persisted?
+        return { status: 200, wish_list: wish_list.reload }
+      else
+        return { status: 422, error: wish_list_item.errors.full_messages }
+      end
+    rescue ActiveRecord::RecordNotFound
+      return { status: 400, error: "Wish list or property not found" }
+    rescue Exception => e
+      return { status: 500, error: e.message }
+    end
+  end
 end

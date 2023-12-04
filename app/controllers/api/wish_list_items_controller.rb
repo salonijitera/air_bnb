@@ -9,30 +9,20 @@ class Api::WishListItemsController < ApplicationController
       render json: { error: 'Wrong format' }, status: :bad_request
       return
     end
-    wish_list = WishList.find_by(id: wish_list_id)
-    property = Property.find_by(id: property_id)
-    # Check if wish list and property exist
-    if wish_list.nil?
-      render json: { error: 'This wish_list is not found' }, status: :not_found
-      return
-    elsif property.nil?
-      render json: { error: 'This property is not found' }, status: :not_found
-      return
+    begin
+      # Use WishListService to validate and add property to wish list
+      wish_list = WishListService.validate_and_add_property(wish_list_id, property_id)
+      # Return success message and updated wish list
+      render json: { status: 200, message: 'Property added to wish list successfully', wish_list: WishListSerializer.new(wish_list) }, status: :ok
+    rescue ErrorMessage::InvalidParameters => e
+      render json: { error: e.message }, status: :bad_request
+    rescue ErrorMessage::RecordNotFound => e
+      render json: { error: e.message }, status: :not_found
+    rescue ErrorMessage::RecordAlreadyExists => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue => e
+      render json: { error: 'Internal Server Error', message: e.message }, status: :internal_server_error
     end
-    # Check if property is already in wish list
-    if WishListItem.exists?(wish_list_id: wish_list_id, property_id: property_id)
-      render json: { error: 'Property already in wish list' }, status: :unprocessable_entity
-      return
-    end
-    # Add property to wish list
-    wish_list_item = WishListItem.create(wish_list_id: wish_list_id, property_id: property_id)
-    if wish_list_item.persisted?
-      render json: { status: 200, wish_list_item: wish_list_item }, status: :ok
-    else
-      render json: { error: 'Failed to add property to wish_list' }, status: :internal_server_error
-    end
-  rescue => e
-    render json: { error: 'Internal Server Error', message: e.message }, status: :internal_server_error
   end
   private
   def authenticate_user!
