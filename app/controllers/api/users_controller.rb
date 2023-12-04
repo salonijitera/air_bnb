@@ -4,9 +4,9 @@ class Api::UsersController < ApplicationController
   before_action :validate_params, only: [:update]
   def update
     if @user.update(user_params)
-      render json: { status: 200, user: @user }, status: 200
+      render json: { message: 'Profile updated successfully', user: @user }, status: 200
     else
-      render json: { message: 'Failed to update profile', errors: @user.errors.full_messages }, status: 500
+      render json: { message: 'Failed to update profile', errors: @user.errors.full_messages }, status: 422
     end
   end
   def register
@@ -30,10 +30,12 @@ class Api::UsersController < ApplicationController
   end
   private
   def set_user
-    @user = User.find_by(id: params[:id])
-    return render json: { message: 'This user is not found' }, status: 404 unless @user
-    return render json: { message: 'User is not authenticated' }, status: 401 unless current_user
-    return render json: { message: 'User does not have permission to access the resource' }, status: 403 unless current_user.id == @user.id
+    @user = User.find_by_id(params[:id])
+    if @user.nil?
+      render json: { error: 'User not found' }, status: 404
+    elsif current_user != @user
+      render json: { error: 'You are not authorized to perform this action' }, status: 403
+    end
   end
   def user_params
     params.require(:user).permit(:name, :email, :password)
