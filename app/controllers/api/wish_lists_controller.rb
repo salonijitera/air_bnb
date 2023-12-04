@@ -1,5 +1,6 @@
 class Api::WishListsController < ApplicationController
   before_action :authenticate_user!
+  before_action :find_wish_list, only: [:share_wish_list]
   def create
     return render json: { error: 'Unauthorized' }, status: 401 unless user_signed_in?
     return render json: { error: 'Name cannot be empty' }, status: 422 if params[:name].blank?
@@ -36,5 +37,26 @@ class Api::WishListsController < ApplicationController
     end
   rescue => e
     render json: { error: e.message }, status: 500
+  end
+  def share_wish_list
+    begin
+      user = User.find(params[:user_id])
+      if @wish_list.users.include?(user)
+        render json: { error: "User is already a collaborator" }, status: 422
+      else
+        @wish_list.users << user
+        @wish_list.save
+        NotificationService.new(user, "You have been added as a collaborator to the wish list: #{@wish_list.name}").send
+        render 'show.json.jbuilder', status: 200
+      end
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "User or WishList not found" }, status: 404
+    rescue => e
+      render json: { error: e.message }, status: 500
+    end
+  end
+  private
+  def find_wish_list
+    @wish_list = WishList.find(params[:wish_list_id])
   end
 end
