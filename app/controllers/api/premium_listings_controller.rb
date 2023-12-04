@@ -3,12 +3,16 @@ class Api::PremiumListingsController < ApplicationController
   before_action :authorize_user, only: [:destroy]
   before_action :validate_params, only: [:destroy]
   def create
-    listing_name = params[:listing_name]
-    listing_status = params[:listing_status]
+    title = params[:title] || params[:listing_name]
+    description = params[:description]
+    price = params[:price]
+    user_id = params[:user_id]
+    status = params[:status] || params[:listing_status]
+    posted_date = params[:posted_date]
     # Validate the input parameters
-    if listing_name.is_a?(String) && listing_name.length <= 200 && PremiumListing.statuses.include?(listing_status)
+    if title.is_a?(String) && title.length <= 200 && PremiumListing.statuses.include?(status) && (description.nil? || description.is_a?(String)) && (price.nil? || price.is_a?(Float)) && (user_id.nil? || User.exists?(user_id)) && (posted_date.nil? || posted_date.is_a?(Date))
       # Create a new record in the premium_listing table
-      listing = PremiumListing.create(listing_name: listing_name, listing_status: listing_status, created_at: Time.now, updated_at: Time.now)
+      listing = PremiumListing.create(title: title, description: description, price: price, user_id: user_id, status: status, posted_date: posted_date, created_at: Time.now, updated_at: Time.now)
       if listing.persisted?
         # Return the ID of the newly created premium listing
         render json: { status: 200, premium_listing: listing }, status: :ok
@@ -17,11 +21,7 @@ class Api::PremiumListingsController < ApplicationController
         render json: { error: listing.errors.full_messages }, status: :internal_server_error
       end
     else
-      if listing_name.length > 200
-        render json: { error: 'You cannot input more 200 characters.' }, status: :bad_request
-      else
-        render json: { error: 'Invalid listing status.' }, status: :bad_request
-      end
+      render json: { error: 'Invalid input parameters.' }, status: :bad_request
     end
   rescue => e
     if e.class == ActiveRecord::RecordNotFound

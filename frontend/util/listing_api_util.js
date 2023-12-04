@@ -1,3 +1,4 @@
+import axios from 'axios';
 export const fetchListings = (filters) => {
   return $.ajax({
     method: "GET",
@@ -35,6 +36,10 @@ export const deleteListing = id => {
     method: 'DELETE',
     url: `/api/listings/${id}`
   });
+}
+export const createPremiumListing = premiumListingData => {
+  return axios.post('/api/premium_listings', premiumListingData)
+    .then(res => res.data);
 }
 export const deletePremiumListing = id => {
   return $.ajax({
