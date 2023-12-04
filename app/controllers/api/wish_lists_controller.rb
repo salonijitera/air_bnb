@@ -1,4 +1,5 @@
 class Api::WishListsController < ApplicationController
+  before_action :authenticate_user!, only: [:share]
   def create
     user = User.find_by_id(params[:user_id])
     if user
@@ -14,20 +15,22 @@ class Api::WishListsController < ApplicationController
   rescue => e
     render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
   end
-  def share_wish_list
-    wish_list = WishList.find_by_id(params[:wish_list_id])
-    user = User.find_by_id(params[:user_id])
-    if wish_list && user
-      shared_wish_list = SharedWishList.create(wish_list_id: wish_list.id, user_id: user.id)
-      if shared_wish_list.persisted?
-        render json: { status: 200, message: 'Wish list has been successfully shared.' }, status: :ok
-      else
-        render json: { message: 'Failed to share wish list', errors: shared_wish_list.errors.full_messages }, status: :unprocessable_entity
-      end
+  def share
+    wish_list = WishList.find_by_id(params[:id])
+    email = params[:email]
+    if wish_list.nil?
+      render json: { message: 'This wish list is not found' }, status: :unprocessable_entity
+    elsif !params[:id].to_s.match(/\A[+-]?\d+?(\.\d+)?\Z/)
+      render json: { message: 'Wrong format' }, status: :unprocessable_entity
+    elsif email.blank? || !email.match(/\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i)
+      render json: { message: 'Invalid email format.' }, status: :unprocessable_entity
     else
-      render json: { message: 'Wish list or User not found' }, status: :not_found
+      begin
+        WishListSharingService.shareWishList(wish_list.id, email)
+        render json: { status: 200, message: 'Wish list was successfully shared.' }, status: :ok
+      rescue => e
+        render json: { message: 'Failed to share wish list', error: e.message }, status: :internal_server_error
+      end
     end
-  rescue => e
-    render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
   end
 end
