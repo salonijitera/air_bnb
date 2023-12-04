@@ -1,5 +1,5 @@
 class Api::UsersController < ApplicationController
-  before_action :authorize, only: [:check_vip_status, :vip_status]
+  before_action :authorize, only: [:check_vip_status, :vip_status, :mark_as_vip]
   def create
     @user = User.new(user_params)
     if @user.valid?
@@ -29,6 +29,27 @@ class Api::UsersController < ApplicationController
       user = User.find_by(id: user_id)
       if user
         render json: { status: 200, user: { id: user.id, is_vip: user.is_vip } }, status: :ok
+      else
+        render json: { error: 'This user is not found' }, status: :not_found
+      end
+    else
+      render json: { error: 'Wrong format' }, status: :bad_request
+    end
+  rescue => e
+    render json: { error: e.message }, status: :internal_server_error
+  end
+  def mark_as_vip
+    user_id = params[:id]
+    if user_id.is_a?(Integer)
+      user = User.find_by(id: user_id)
+      if user
+        bookings_count = Booking.where(user_id: user_id, is_international: true).where('created_at >= ?', 1.year.ago).count
+        if bookings_count > 50
+          user.update(is_vip: true)
+          render json: { status: 200, user: { id: user.id, name: user.name, is_vip: user.is_vip } }, status: :ok
+        else
+          render json: { error: 'User does not meet the requirements to be marked as VIP' }, status: :unprocessable_entity
+        end
       else
         render json: { error: 'This user is not found' }, status: :not_found
       end
