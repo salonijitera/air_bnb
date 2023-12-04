@@ -1,3 +1,4 @@
+// PATH: /app/assets/javascripts/application.js
 // This is a manifest file that'll be compiled into application.js, which will include all the files
 // listed below.
 //
@@ -14,3 +15,28 @@
 //= require rails-ujs
 //= require activestorage
 //= require_tree .
+function createProfile(userId, firstName, lastName, dateOfBirth, profilePicture) {
+  const data = {
+    user_id: userId,
+    first_name: firstName,
+    last_name: lastName,
+    date_of_birth: dateOfBirth,
+    profile_picture: profilePicture
+  };
+  fetch('/user_profiles', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(data => {
+    // Update UI here based on the response
+    console.log(data);
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
+}
