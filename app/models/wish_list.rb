@@ -1,6 +1,20 @@
+# == Schema Information
+#
+# Table name: wish_lists
+#
+#  id              :bigint           not null, primary key
+#  name            :string
+#  user_id         :integer
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#
 class WishList < ApplicationRecord
   belongs_to :user
-  has_many :wish_list_items
+  validates :name, presence: { message: "The name is required." }
+  validates :user_id, numericality: { only_integer: true, message: "Wrong format" }
+  has_many :wish_list_items,
+    foreign_key: :wish_list_id,
+    class_name: 'WishListItem'
   def shareWishList(id, email)
     wish_list = WishList.find(id)
     return { status: 400, message: 'Wish list not found' } unless wish_list

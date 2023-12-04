@@ -4,13 +4,15 @@ class Api::WishListsController < ApplicationController
     if user
       wish_list = user.wish_lists.new(name: params[:name])
       if wish_list.save
-        render json: { message: 'Wish list created successfully', wish_list: wish_list }, status: :created
+        render json: { status: 200, message: 'Wish list created successfully', wish_list: wish_list }, status: :created
       else
         render json: { message: 'Failed to create wish list', errors: wish_list.errors.full_messages }, status: :unprocessable_entity
       end
     else
       render json: { message: 'User not found' }, status: :not_found
     end
+  rescue => e
+    render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
   end
   def share
     id = params[:id]
@@ -36,16 +38,22 @@ class Api::WishListsController < ApplicationController
       return
     end
     # Attempt to share the wish list
-    if share_wish_list(email)
+    if share_wish_list(email, wish_list)
       render json: { status: 200, message: 'Wish list was successfully shared.' }, status: :ok
     else
       render json: { error: 'Internal Server Error' }, status: :internal_server_error
     end
+  rescue => e
+    render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
   end
   private
-  def share_wish_list(email)
+  def share_wish_list(email, wish_list)
+    shared_link = generate_shared_link(wish_list.id)
     # This is a placeholder and should be replaced with your actual implementation.
     # For example, you could send an email or a notification within your application.
     # UserMailer.share_wish_list(email, shared_link).deliver_now
+  end
+  def generate_shared_link(wish_list_id)
+    "https://yourwebsite.com/wish_lists/#{wish_list_id}"
   end
 end
