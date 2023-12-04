@@ -5,6 +5,10 @@ class Api::WishListItemsController < ApplicationController
     wish_list_id = params[:wish_list_id]
     property_id = params[:property_id]
     # Validate parameters
+    unless wish_list_id.is_a?(Integer) && property_id.is_a?(Integer)
+      render json: { error: 'Wrong format' }, status: :bad_request
+      return
+    end
     unless WishList.exists?(wish_list_id) && Property.exists?(property_id)
       render json: { error: 'This wish list or property is not found' }, status: :bad_request
       return
@@ -15,10 +19,10 @@ class Api::WishListItemsController < ApplicationController
       return
     end
     # Add property to the wish list
-    WishListItem.create(wish_list_id: wish_list_id, property_id: property_id)
-    flash[:notice] = 'Property has been successfully added to the wish list'
-    wish_list = WishList.find(wish_list_id)
-    render json: { wish_list: wish_list, properties: wish_list.properties }, status: :ok
+    wish_list_item = WishListItem.create(wish_list_id: wish_list_id, property_id: property_id)
+    render json: { status: 200, wish_list_item: wish_list_item }, status: :ok
+  rescue => e
+    render json: { error: 'Internal Server Error', message: e.message }, status: :internal_server_error
   end
   private
   def authenticate_user!
