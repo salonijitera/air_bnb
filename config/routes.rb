@@ -29,5 +29,9 @@ Rails.application.routes.draw do
     post 'wish_lists/:wish_list_id/properties/:property_id', to: 'wish_list_items#add_property'
     resources :local_experiences, only: [:create]
     put '/localExperience/:id', to: 'local_experiences#update'
+    post '/listings/premium', to: 'listings#create_premium_listing'
+    resources :premium_listings, only: [:create]
+    delete '/premium_listing/:id', to: 'premium_listings#destroy'
+    post '/api/premium_listings', to: 'premium_listings#create'
   end
 end
