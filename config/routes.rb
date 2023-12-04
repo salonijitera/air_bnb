@@ -16,5 +16,10 @@ Rails.application.routes.draw do
         get 'get_notifications'
       end
     end
+    resources :wish_list_items, only: [] do
+      collection do
+        post 'add_property'
+      end
+    end
   end
 end
