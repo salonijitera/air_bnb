@@ -15,4 +15,7 @@ class Notification < ApplicationRecord
   belongs_to :user
   validates :title, length: { maximum: 255 }, allow_nil: true
   validates :description, length: { maximum: 65535 }, allow_nil: true
+  validates :message, presence: true
+  validates :status, presence: true
+  validates :user_id, presence: true
 end
