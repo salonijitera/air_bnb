@@ -1,5 +1,5 @@
 class Api::LocalExperiencesController < ApplicationController
-  before_action :authenticate_user!, only: [:create]
+  before_action :authenticate_user!, only: [:create, :destroy]
   def create
     validator = WishListValidator.new(local_experience_params)
     unless validator.valid?
@@ -14,6 +14,19 @@ class Api::LocalExperiencesController < ApplicationController
     begin
       local_experience = LocalExperience.create!(local_experience_params.merge(location_id: location.id))
       render json: { status: 200, message: "Local experience was successfully created.", id: local_experience.id }, status: 200
+    rescue => e
+      render json: { error: e.message }, status: 500
+    end
+  end
+  def destroy
+    local_experience = LocalExperience.find_by(id: params[:id])
+    unless local_experience
+      render json: { error: "Local experience not found!" }, status: 404
+      return
+    end
+    begin
+      local_experience.destroy
+      render json: { status: 200, message: "Local experience was successfully deleted." }, status: 200
     rescue => e
       render json: { error: e.message }, status: 500
     end
