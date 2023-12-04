@@ -5,7 +5,7 @@ class CreateNotifications < ActiveRecord::Migration[5.2]
       t.string :status
       t.integer :user_id
       t.string :title, limit: 255
-      t.text :description, limit: 65535
+      t.text :abc, limit: 65535
       t.timestamps
     end
     add_index :notifications, :user_id
