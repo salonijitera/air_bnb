@@ -1,7 +1,7 @@
 class Api::WishListItemsController < ApplicationController
   before_action :authenticate_user!
   before_action :authorize_user!
-  def add_property
+  def create
     wish_list_id = params[:wish_list_id]
     property_id = params[:property_id]
     # Validate parameters
@@ -11,9 +11,9 @@ class Api::WishListItemsController < ApplicationController
     end
     begin
       # Use WishListService to validate and add property to wish list
-      wish_list = WishListService.validate_and_add_property(wish_list_id, property_id)
+      wish_list_item = WishListService.add_property_to_wish_list(wish_list_id, property_id)
       # Return success message and updated wish list
-      render json: { status: 200, message: 'Property added to wish list successfully', wish_list: WishListSerializer.new(wish_list) }, status: :ok
+      render json: { status: 200, message: 'Property added to wish list successfully', wish_list_item: WishListItemSerializer.new(wish_list_item) }, status: :ok
     rescue ErrorMessage::InvalidParameters => e
       render json: { error: e.message }, status: :bad_request
     rescue ErrorMessage::RecordNotFound => e
