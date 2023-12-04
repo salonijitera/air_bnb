@@ -7,5 +7,10 @@ Rails.application.routes.draw do
     resources :bookings, only: [:index, :show, :create, :destroy, :update]
     resources :wish_lists, only: [:create]
     resource :session, only: [:create, :destroy]
+    resources :notifications, only: [] do
+      collection do
+        get 'get_notifications'
+      end
+    end
   end
 end
