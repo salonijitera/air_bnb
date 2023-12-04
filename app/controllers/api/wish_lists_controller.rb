@@ -14,46 +14,20 @@ class Api::WishListsController < ApplicationController
   rescue => e
     render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
   end
-  def share
-    id = params[:id]
-    email = params[:email]
-    # Validate parameters
-    unless id.is_a?(Integer)
-      render json: { error: 'Wrong format' }, status: :bad_request
-      return
-    end
-    unless email =~ URI::MailTo::EMAIL_REGEXP
-      render json: { error: 'Invalid email format' }, status: :bad_request
-      return
-    end
-    # Check if user is authenticated
-    unless current_user
-      render json: { error: 'Unauthorized' }, status: :unauthorized
-      return
-    end
-    # Check if user has permission to access the wish list
-    wish_list = WishList.find_by(id: id)
-    unless wish_list && wish_list.user_id == current_user.id
-      render json: { error: 'Forbidden' }, status: :forbidden
-      return
-    end
-    # Attempt to share the wish list
-    if share_wish_list(email, wish_list)
-      render json: { status: 200, message: 'Wish list was successfully shared.' }, status: :ok
+  def share_wish_list
+    wish_list = WishList.find_by_id(params[:wish_list_id])
+    user = User.find_by_id(params[:user_id])
+    if wish_list && user
+      shared_wish_list = SharedWishList.create(wish_list_id: wish_list.id, user_id: user.id)
+      if shared_wish_list.persisted?
+        render json: { status: 200, message: 'Wish list has been successfully shared.' }, status: :ok
+      else
+        render json: { message: 'Failed to share wish list', errors: shared_wish_list.errors.full_messages }, status: :unprocessable_entity
+      end
     else
-      render json: { error: 'Internal Server Error' }, status: :internal_server_error
+      render json: { message: 'Wish list or User not found' }, status: :not_found
     end
   rescue => e
     render json: { message: 'Internal Server Error', error: e.message }, status: :internal_server_error
-  end
-  private
-  def share_wish_list(email, wish_list)
-    shared_link = generate_shared_link(wish_list.id)
-    # This is a placeholder and should be replaced with your actual implementation.
-    # For example, you could send an email or a notification within your application.
-    # UserMailer.share_wish_list(email, shared_link).deliver_now
-  end
-  def generate_shared_link(wish_list_id)
-    "https://yourwebsite.com/wish_lists/#{wish_list_id}"
   end
 end
