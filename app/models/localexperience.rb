@@ -11,6 +11,7 @@
 #  image       :string
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
+#  best_reviewed :integer
 #
 class Localexperience < ApplicationRecord
   validates :title, :description, :location, :price, :date, presence: true
@@ -18,6 +19,7 @@ class Localexperience < ApplicationRecord
   validates :description, length: { maximum: 10000, message: "You cannot input more 10000 characters." }
   validates :location, length: { maximum: 200, message: "You cannot input more 200 characters." }
   validates :price, numericality: { greater_than_or_equal_to: 0, message: "Wrong format." }
+  validates :best_reviewed, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5, message: "Wrong format." }, allow_nil: true
   validate :date_cannot_be_in_the_past, :date_is_date?, :image_is_file?
   has_one_attached :image
   private
