@@ -1,11 +1,8 @@
 class Booking < ApplicationRecord
-  belongs_to :user,
-    foreign_key: :user_id,
-    class_name: 'User'
-  belongs_to :property,
-    foreign_key: :property_id,
-    class_name: 'Property'
-  validates :user_id, :property_id, presence: true, numericality: { only_integer: true }
+  belongs_to :user, foreign_key: :user_id, class_name: 'User'
+  belongs_to :property, foreign_key: :property_id, class_name: 'Property'
+  validates :user_id, :property_id, :date, :is_premium, presence: true
+  validates :user_id, :property_id, numericality: { only_integer: true }
   enum status: { pending: 0, confirmed: 1, cancelled: 2 }
   def available?
     property.availability
