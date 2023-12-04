@@ -6,7 +6,9 @@ import {
   RECEIVE_BOOKING_BY_BOOKING_ID,
   REMOVE_BOOKING_BY_BOOKING_ID,
   RECEIVE_BOOKING,
-  RECEIVE_BOOKING_ERRORS
+  RECEIVE_BOOKING_ERRORS,
+  BOOK_PROPERTY_SUCCESS,
+  BOOK_PROPERTY_ERROR
 } from '../actions/booking_actions';
 import { merge } from 'lodash';
 const bookingReducer = (oldState = {}, action) => {
@@ -28,6 +30,11 @@ const bookingReducer = (oldState = {}, action) => {
       newState[action.booking.id] = action.booking;
       return newState;
     case RECEIVE_BOOKING_ERRORS:
+      return { ...oldState, errors: action.errors };
+    case BOOK_PROPERTY_SUCCESS:
+      newState[action.booking.id] = action.booking;
+      return newState;
+    case BOOK_PROPERTY_ERROR:
       return { ...oldState, errors: action.errors };
     default:
       return oldState;

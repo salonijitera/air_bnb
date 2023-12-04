@@ -1,3 +1,4 @@
+// PATH: /frontend/actions/booking_actions.js
 import * as BookingApiUtil from '../util/booking_api_util';
 export const RECEIVE_ALL_BOOKINGS = 'RECEIVE_ALL_BOOKINGS';
 export const RECEIVE_BOOKINGS_BY_USER_ID = 'RECEIVE_BOOKINGS_BY_USER_ID';
@@ -5,6 +6,9 @@ export const RECEIVE_BOOKINGS_BY_LISTING_ID = 'RECEIVE_BOOKINGS_BY_LISTING_ID';
 export const RECEIVE_BOOKING_BY_BOOKING_ID = 'RECEIVE_BOOKING_BY_BOOKING_ID';
 export const RECEIVE_BOOKING_ERRORS = 'RECEIVE_BOOKING_ERRORS';
 export const REMOVE_BOOKING_BY_BOOKING_ID = 'REMOVE_BOOKING_BY_BOOKING_ID';
+export const BOOK_PROPERTY = 'BOOK_PROPERTY';
+export const BOOK_PROPERTY_SUCCESS = 'BOOK_PROPERTY_SUCCESS';
+export const BOOK_PROPERTY_ERROR = 'BOOK_PROPERTY_ERROR';
 // Regular action creators
 const receiveAllBookings = bookings => {
   return ({
@@ -42,6 +46,18 @@ const removeBookingByBookingId = booking => {
     bookingId: booking.id
   });
 } 
+const bookPropertySuccess = bookingDetails => {
+  return ({
+    type: BOOK_PROPERTY_SUCCESS,
+    bookingDetails: bookingDetails
+  });
+}
+const bookPropertyError = error => {
+  return ({
+    type: BOOK_PROPERTY_ERROR,
+    error: error
+  });
+}
 // Thunk action creators
 export const fetchAllBookings = () => dispatch => {
   return BookingApiUtil.fetchAllBookings()
@@ -67,4 +83,9 @@ export const createBooking = (userId, propertyId) => dispatch => {
 export const deleteBooking = bookingId => dispatch => {
   return BookingApiUtil.deleteBooking(bookingId)
     .then(booking => dispatch(removeBookingByBookingId(booking)));
+}
+export const bookProperty = bookingDetails => dispatch => {
+  return BookingApiUtil.bookProperty(bookingDetails)
+    .then(response => dispatch(bookPropertySuccess(response)))
+    .catch(err => dispatch(bookPropertyError(err)));
 }

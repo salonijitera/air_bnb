@@ -45,6 +45,29 @@ class Api::BookingsController < ApplicationController
       render json: ['Unable to update booking'], status: 401
     end
   end
+  def book
+    return render json: { error: 'Unauthorized' }, status: 401 unless user_signed_in?
+    return render json: { error: 'Wrong format' }, status: 422 unless params[:id].is_a?(Integer) && params[:user_id].is_a?(Integer)
+    property = Property.find_by(id: params[:id])
+    user = User.find_by(id: params[:user_id])
+    return render json: { error: 'This property is not found' }, status: 404 if property.nil?
+    return render json: { error: 'This user is not found' }, status: 404 if user.nil?
+    begin
+      date_from = Date.parse(params[:date_from])
+      date_to = Date.parse(params[:date_to])
+    rescue ArgumentError
+      return render json: { error: 'Invalid date format.' }, status: 400
+    end
+    return render json: { error: 'The start date cannot be after the end date.' }, status: 400 if date_from > date_to
+    booking = Booking.create(user_id: user.id, listing_id: property.id, date_from: date_from, date_to: date_to)
+    if booking.persisted?
+      render json: { status: 200, message: 'Booking successfully created', booking: booking }, status: 200
+    else
+      render json: { error: 'Failed to create booking' }, status: 500
+    end
+  rescue => e
+    render json: { error: e.message }, status: 500
+  end
   private
   def booking_params
     params.require(:booking).permit(:id, :start_date, :end_date, :num_guests, :listing_id, :user_id, :date_from, :date_to)

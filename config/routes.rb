@@ -5,6 +5,11 @@ Rails.application.routes.draw do
     resources :listings, only: [:show, :index]
     resources :reviews, only: [:index]
     resources :bookings, only: [:index, :show, :create, :destroy, :update]
+    resources :properties, only: [] do
+      member do
+        post 'book'
+      end
+    end
     resources :wish_lists, only: [:create] do
       member do
         post 'share'
