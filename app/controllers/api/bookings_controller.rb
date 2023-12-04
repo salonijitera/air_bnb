@@ -10,7 +10,9 @@ class Api::BookingsController < ApplicationController
     render :show
   end
   def create
-    property = Property.find_by(id: params[:property_id])
+    return render json: { error: 'Unauthorized' }, status: 401 unless user_signed_in?
+    return render json: { error: 'Wrong format' }, status: 422 unless params[:id].is_a?(Integer) && params[:user_id].is_a?(Integer)
+    property = Property.find_by(id: params[:id])
     user = User.find_by(id: params[:user_id])
     if property.nil? || user.nil?
       render json: { error: 'Invalid property or user id' }, status: 404
@@ -20,7 +22,7 @@ class Api::BookingsController < ApplicationController
       property.update(availability: false)
       @booking = Booking.new(user_id: user.id, listing_id: property.id)
       if @booking.save
-        render json: @booking, status: 201
+        render json: { status: 200, message: 'Property successfully booked' }
       else
         render json: { error: 'Failed to create booking' }, status: 500
       end
