@@ -16,7 +16,7 @@ class Api::WishListItemsController < ApplicationController
         if wish_list_item.save
           render json: { status: 200, wish_list_item: wish_list_item }, status: :ok
         else
-          render json: { error: 'Failed to add item to wish_list' }, status: :unprocessable_entity
+          render json: { error: 'Failed to add item to wish list' }, status: :unprocessable_entity
         end
       else
         render json: { error: 'Invalid property or wish list' }, status: :bad_request
