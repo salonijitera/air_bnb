@@ -5,8 +5,12 @@ class Api::WishListItemsController < ApplicationController
     wish_list_id = params[:wish_list_id]
     property_id = params[:property_id]
     # Validate parameters
+    unless wish_list_id.is_a?(Integer) && property_id.is_a?(Integer)
+      render json: { error: 'Wrong format' }, status: :bad_request
+      return
+    end
     unless WishList.exists?(wish_list_id) && Property.exists?(property_id)
-      render json: { error: 'Invalid wish list or property' }, status: :bad_request
+      render json: { error: 'This wish list or property is not found' }, status: :bad_request
       return
     end
     # Check if property is already added to the wish list
@@ -15,10 +19,17 @@ class Api::WishListItemsController < ApplicationController
       return
     end
     # Add property to the wish list
-    wish_list_item = WishListItem.create(wish_list_id: wish_list_id, property_id: property_id)
-    # Return success message and updated wish list
-    wish_list = WishList.find(wish_list_id)
-    render json: { status: 200, message: 'Property added to wish list successfully', wish_list: wish_list }, status: :ok
+    result = WishListService.add_property_to_wish_list(wish_list_id, property_id)
+    case result[:status]
+    when 200
+      render json: { status: 200, message: 'Property added to wish list successfully', wish_list: result[:wish_list] }, status: :ok
+    when 400
+      render json: { error: 'Bad Request', message: result[:message] }, status: :bad_request
+    when 422
+      render json: { error: 'Unprocessable Entity', message: result[:message] }, status: :unprocessable_entity
+    when 500
+      render json: { error: 'Internal Server Error', message: result[:message] }, status: :internal_server_error
+    end
   rescue => e
     render json: { error: 'Internal Server Error', message: e.message }, status: :internal_server_error
   end
