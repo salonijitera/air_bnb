@@ -40,5 +40,15 @@ class PremiumListingService
     # Assuming we have a mailer setup
     UserMailer.with(user: @user, premium_listing: premium_listing, notification: notification).premium_listing_creation_notification_email.deliver_later
   end
+  def identify_vip_users
+    one_year_ago = Date.years_ago(1)
+    vip_users = Booking.where(is_international: true, booking_date: one_year_ago..Date.today)
+                       .group(:user_id)
+                       .having('count(id) > 50')
+                       .select('user_id, count(id) as total_bookings')
+    User.where(id: vip_users.map(&:user_id)).update_all(is_vip: true)
+    User.where.not(id: vip_users.map(&:user_id)).update_all(is_vip: false)
+    vip_users.as_json
+  end
   # ... rest of the class
 end
