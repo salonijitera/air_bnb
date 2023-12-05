@@ -3,6 +3,9 @@ class User < ApplicationRecord
   has_many :notifications, foreign_key: :user_id, class_name: 'Notification'
   has_many :premium_listings, foreign_key: :user_id, class_name: 'PremiumListing'
   has_many :bookings, foreign_key: :user_id, class_name: 'Booking'
+  has_many :listings, foreign_key: :user_id, class_name: 'Listing'
   validates :name, :email, :location, presence: true
-  validates :is_vip, inclusion: { in: [true, false] }
+  validates :name, length: { maximum: 100 }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :is_vip, :is_premium, inclusion: { in: [true, false] }
 end

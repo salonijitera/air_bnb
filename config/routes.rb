@@ -4,6 +4,7 @@ Rails.application.routes.draw do
     resources :users, only: [:create, :index, :show] do
       get 'vip_status', on: :member
     end
+    put '/users/:id', to: 'users#update'
     resources :listings, only: [:show, :index]
     resources :reviews, only: [:index]
     resources :bookings, only: [:index, :show, :create, :destroy, :update]
@@ -29,7 +30,7 @@ Rails.application.routes.draw do
       end
     end
     post 'wish_lists/:wish_list_id/properties/:property_id', to: 'wish_list_items#add_property'
-    resources :local_experiences, only: [:create]
+    resources :local_experiences, only: [:create, :index, :show, :update, :destroy]
     put '/localExperience/:id', to: 'local_experiences#update'
     post '/listings/premium', to: 'listings#create_premium_listing'
     resources :premium_listings, only: [:create]

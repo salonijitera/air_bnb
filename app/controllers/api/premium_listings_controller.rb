@@ -1,7 +1,7 @@
 class Api::PremiumListingsController < ApplicationController
   before_action :authenticate_user!
   before_action :authorize_user, only: [:destroy, :update, :update_premium_status]
-  before_action :validate_params, only: [:destroy, :update, :update_premium_status]
+  before_action :validate_params, only: [:destroy, :update, :update_premium_status, :create]
   def retrieve_vip_listings
     user_id = params[:user_id]
     @premium_listings = PremiumListing.where(user_id: user_id)
@@ -33,5 +33,27 @@ class Api::PremiumListingsController < ApplicationController
     else
       render json: { error: 'Internal Server Error' }, status: :internal_server_error
     end
+  end
+  def create
+    user_id = params[:user_id]
+    title = params[:title]
+    description = params[:description]
+    user = User.find_by(id: user_id)
+    if user.nil? || !user.is_premium
+      render json: { error: 'This user is not found or not a premium user' }, status: :bad_request
+    else
+      premium_listing = PremiumListing.new(title: title, description: description, is_premium: true, user_id: user_id)
+      if premium_listing.valid?
+        if premium_listing.save
+          render json: { status: 200, message: 'Premium listing created successfully.', premium_listing: premium_listing }, status: :created
+        else
+          render json: { error: 'Failed to create premium listing.' }, status: :internal_server_error
+        end
+      else
+        render json: { error: 'Invalid title or description.' }, status: :unprocessable_entity
+      end
+    end
+  rescue => e
+    render json: { error: e.message }, status: :internal_server_error
   end
 end
