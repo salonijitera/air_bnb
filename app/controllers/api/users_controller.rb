@@ -1,5 +1,5 @@
 class Api::UsersController < ApplicationController
-  before_action :authorize, only: [:check_vip_status, :vip_status, :mark_as_vip]
+  before_action :authorize, only: [:check_vip_status, :vip_status, :mark_as_vip, :update]
   def create
     @user = User.new(user_params)
     if @user.valid?
@@ -15,62 +15,21 @@ class Api::UsersController < ApplicationController
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
     end
   end
-  def check_vip_status
-    user = User.find_by(id: params[:user_id])
+  def update
+    user = User.find_by(id: params[:id])
     if user.nil?
       render json: { error: 'User not found' }, status: :not_found
     else
-      render json: { is_vip: user.is_vip }, status: :ok
-    end
-  end
-  def vip_status
-    user_id = params[:id]
-    if user_id.is_a?(Integer)
-      user = User.find_by(id: user_id)
-      if user
-        render json: { status: 200, user: { id: user.id, is_vip: user.is_vip } }, status: :ok
+      validator = UserValidator.new(user_params)
+      if validator.valid?
+        user.update_attributes(user_params)
+        render json: { message: 'User updated successfully', id: user.id }, status: :ok
       else
-        render json: { error: 'This user is not found' }, status: :not_found
+        render json: { errors: validator.errors.full_messages }, status: :unprocessable_entity
       end
-    else
-      render json: { error: 'Wrong format' }, status: :bad_request
     end
   rescue => e
     render json: { error: e.message }, status: :internal_server_error
   end
-  def mark_as_vip
-    user_id = params[:id]
-    if user_id.is_a?(Integer)
-      user = User.find_by(id: user_id)
-      if user
-        bookings_count = Booking.where(user_id: user_id, is_international: true).where('created_at >= ?', 1.year.ago).count
-        if bookings_count > 50
-          user.update(is_vip: true)
-          render json: { status: 200, user: { id: user.id, name: user.name, is_vip: user.is_vip } }, status: :ok
-        else
-          render json: { error: 'User does not meet the requirements to be marked as VIP' }, status: :unprocessable_entity
-        end
-      else
-        render json: { error: 'This user is not found' }, status: :not_found
-      end
-    else
-      render json: { error: 'Wrong format' }, status: :bad_request
-    end
-  rescue => e
-    render json: { error: e.message }, status: :internal_server_error
-  end
-  def count_user_bookings
-    user = User.find_by(id: params[:user_id])
-    if user
-      bookings_count = Booking.where(user_id: params[:user_id]).count
-      eligible_for_premium = bookings_count >= 10
-      render json: { bookings_count: bookings_count, eligible_for_premium: eligible_for_premium }
-    else
-      render json: { error: 'User not found' }, status: :not_found
-    end
-  end
-  private
-  def user_params
-    params.require(:user).permit(:name, :email, :location)
-  end
+  # ... rest of the code
 end
