@@ -14,12 +14,18 @@ class Authorization
     unless user.has_permission?(@request.path)
       return { error: 'Forbidden', status: 403 }
     end
-    if @request.path.include?('/api/localExperience/') && (@request.method == 'PUT' || @request.method == 'DELETE')
-      localexperience_id = @request.path.split('/').last.to_i
-      localexperience = Localexperience.find(localexperience_id)
-      unless localexperience && localexperience.user_id == user_id
-        return { error: 'Unauthorized to update this local experience', status: 401 }
+    if @request.path.include?('/api/users/') && @request.method == 'PUT'
+      user_id = @request.path.split('/').last.to_i
+      unless user_id == user.id
+        return { error: 'Unauthorized to update this user profile', status: 401 }
       end
+    end
+    nil
+  end
+  def authorize_user(user_id)
+    current_user_id = @request.headers['user_id']
+    unless current_user_id == user_id
+      return { error: 'User does not have permission to access the resource', status: 403 }
     end
     nil
   end

@@ -4,6 +4,7 @@ Rails.application.routes.draw do
     resources :users, only: [:create, :index, :show] do
       get 'vip_status', on: :member
     end
+    put '/users/:id', to: 'users#update'
     resources :listings, only: [:show, :index]
     resources :reviews, only: [:index]
     resources :bookings, only: [:index, :show, :create, :destroy, :update]

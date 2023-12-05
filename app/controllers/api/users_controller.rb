@@ -18,12 +18,14 @@ class Api::UsersController < ApplicationController
   def update
     user = User.find_by(id: params[:id])
     if user.nil?
-      render json: { error: 'User not found' }, status: :not_found
+      render json: { error: 'This user is not found' }, status: :not_found
+    elsif user.id != current_user.id
+      render json: { error: 'Unauthorized' }, status: :unauthorized
     else
       validator = UserValidator.new(user_params)
       if validator.valid?
         user.update_attributes(user_params)
-        render json: { message: 'User updated successfully', id: user.id }, status: :ok
+        render json: { status: 200, user: { id: user.id, name: user.name, email: user.email } }, status: :ok
       else
         render json: { errors: validator.errors.full_messages }, status: :unprocessable_entity
       end
