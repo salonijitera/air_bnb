@@ -5,8 +5,8 @@ class CreateLocalexperiences < ActiveRecord::Migration[5.2]
       t.text :description
       t.string :location
       t.decimal :price
-      t.datetime :date
       t.string :image
+      t.integer :status, default: 0
       t.timestamps
     end
   end
