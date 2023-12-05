@@ -36,17 +36,21 @@ class Api::PremiumListingsController < ApplicationController
   end
   def create
     user_id = params[:user_id]
+    title = params[:title]
+    description = params[:description]
     user = User.find_by(id: user_id)
-    if user.nil?
-      render json: { error: 'This user is not found' }, status: :not_found
-    elsif !user.is_vip
-      render json: { error: 'This user is not a VIP user' }, status: :unauthorized
+    if user.nil? || !user.is_premium
+      render json: { error: 'This user is not found or not a premium user' }, status: :bad_request
     else
-      premium_listing = PremiumListing.new(user_id: user_id, listing_date: DateTime.now)
-      if premium_listing.save
-        render json: { status: 200, message: 'Premium listing created successfully.', premium_listing: premium_listing }, status: :ok
+      premium_listing = PremiumListing.new(title: title, description: description, is_premium: true, user_id: user_id)
+      if premium_listing.valid?
+        if premium_listing.save
+          render json: { status: 200, message: 'Premium listing created successfully.', premium_listing: premium_listing }, status: :created
+        else
+          render json: { error: 'Failed to create premium listing.' }, status: :internal_server_error
+        end
       else
-        render json: { error: 'Failed to create premium listing.' }, status: :internal_server_error
+        render json: { error: 'Invalid title or description.' }, status: :unprocessable_entity
       end
     end
   rescue => e
