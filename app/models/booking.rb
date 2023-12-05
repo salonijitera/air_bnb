@@ -1,6 +1,6 @@
 class Booking < ApplicationRecord
   belongs_to :user, foreign_key: :user_id, class_name: 'User'
-  validates :user_id, :date, :is_premium, presence: true
+  validates :user_id, :date, :is_premium, :is_international, :booking_date, presence: true
   validates :user_id, numericality: { only_integer: true }
   enum status: { pending: 0, confirmed: 1, cancelled: 2 }
   def available?
