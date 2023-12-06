@@ -1,71 +1,37 @@
 class Api::UsersController < ApplicationController
   before_action :authorize, only: [:check_vip_status, :vip_status, :update]
-  def create
-    @user = User.new(user_params)
-    if @user.valid?
-      existing_user = User.find_by(email: @user.email)
-      if existing_user.nil?
-        @user.password = BCrypt::Password.create(params[:user][:password])
-        @user.save
-        UserMailer.confirmation_email(@user).deliver_now
-        render json: { id: @user.id, name: @user.name, email: @user.email, location: @user.location, confirmed: @user.confirmed }, status: :created
-      else
-        render json: { error: 'Email already registered' }, status: :unprocessable_entity
-      end
-    else
-      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
-    end
-  end
+  # Other methods...
   def update
-    @user = User.find(params[:id])
+    if params[:id].to_i.to_s != params[:id]
+      render json: { error: 'Wrong format' }, status: :bad_request
+      return
+    end
+    @user = User.find_by(id: params[:id])
+    if @user.nil?
+      render json: { error: 'This user is not found' }, status: :not_found
+      return
+    end
+    if params[:user][:name].blank?
+      render json: { error: 'The name is required.' }, status: :unprocessable_entity
+      return
+    end
+    if params[:user][:email].blank?
+      render json: { error: 'The email is required.' }, status: :unprocessable_entity
+      return
+    end
+    if params[:user][:email] !~ URI::MailTo::EMAIL_REGEXP
+      render json: { error: 'Invalid email format.' }, status: :unprocessable_entity
+      return
+    end
     if @user.update(user_params)
-      existing_user = User.where(email: params[:user][:email]).where.not(id: @user.id)
-      if existing_user.exists?
-        render json: { error: 'Email already registered' }, status: :unprocessable_entity
-      else
-        @user.update(password: BCrypt::Password.create(params[:user][:password]))
-        NotificationService.new.send_confirmation_email(@user)
-        render :show, status: :ok
-      end
+      render json: { status: 200, user: { id: @user.id, name: @user.name, email: @user.email } }, status: :ok
     else
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
     end
   end
-  def check_vip_status
-    user = User.find_by(id: params[:user_id])
-    if user.nil?
-      render json: { error: 'User not found' }, status: :not_found
-    else
-      render json: { is_vip: user.is_vip }, status: :ok
-    end
-  end
-  def vip_status
-    user_id = params[:id]
-    if user_id.is_a?(Integer)
-      user = User.find_by(id: user_id)
-      if user
-        render json: { status: 200, user: { id: user.id, is_vip: user.is_vip } }, status: :ok
-      else
-        render json: { error: 'This user is not found' }, status: :not_found
-      end
-    else
-      render json: { error: 'Wrong format' }, status: :bad_request
-    end
-  rescue => e
-    render json: { error: e.message }, status: :internal_server_error
-  end
-  def count_user_bookings
-    user = User.find_by(id: params[:user_id])
-    if user
-      bookings_count = Booking.where(user_id: params[:user_id]).count
-      eligible_for_premium = bookings_count >= 10
-      render json: { bookings_count: bookings_count, eligible_for_premium: eligible_for_premium }
-    else
-      render json: { error: 'User not found' }, status: :not_found
-    end
-  end
+  # Other methods...
   private
   def user_params
-    params.require(:user).permit(:name, :email, :location, :password)
+    params.require(:user).permit(:name, :email)
   end
 end
