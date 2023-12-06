@@ -1,16 +1,31 @@
 class Api::UsersController < ApplicationController
-  before_action :authorize, only: [:check_vip_status, :vip_status]
+  before_action :authorize, only: [:check_vip_status, :vip_status, :update]
   def create
     @user = User.new(user_params)
     if @user.valid?
       existing_user = User.find_by(email: @user.email)
       if existing_user.nil?
-        @user.password = BCrypt::Password.create(params[:password])
+        @user.password = BCrypt::Password.create(params[:user][:password])
         @user.save
-        NotificationService.new.send_confirmation_email(@user)
+        UserMailer.confirmation_email(@user).deliver_now
         render json: { id: @user.id, name: @user.name, email: @user.email, location: @user.location, confirmed: @user.confirmed }, status: :created
       else
         render json: { error: 'Email already registered' }, status: :unprocessable_entity
+      end
+    else
+      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+  def update
+    @user = User.find(params[:id])
+    if @user.update(user_params)
+      existing_user = User.where(email: params[:user][:email]).where.not(id: @user.id)
+      if existing_user.exists?
+        render json: { error: 'Email already registered' }, status: :unprocessable_entity
+      else
+        @user.update(password: BCrypt::Password.create(params[:user][:password]))
+        NotificationService.new.send_confirmation_email(@user)
+        render :show, status: :ok
       end
     else
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
@@ -51,6 +66,6 @@ class Api::UsersController < ApplicationController
   end
   private
   def user_params
-    params.require(:user).permit(:name, :email, :password, :location)
+    params.require(:user).permit(:name, :email, :location, :password)
   end
 end
