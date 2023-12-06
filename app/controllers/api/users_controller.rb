@@ -5,9 +5,10 @@ class Api::UsersController < ApplicationController
     if @user.valid?
       existing_user = User.find_by(email: @user.email)
       if existing_user.nil?
+        @user.password = BCrypt::Password.create(params[:password])
         @user.save
-        UserMailer.confirmation_email(@user).deliver_now
-        render json: { id: @user.id, name: @user.name, email: @user.email, location: @user.location }, status: :created
+        NotificationService.new.send_confirmation_email(@user)
+        render json: { id: @user.id, name: @user.name, email: @user.email, location: @user.location, confirmed: @user.confirmed }, status: :created
       else
         render json: { error: 'Email already registered' }, status: :unprocessable_entity
       end
@@ -50,6 +51,6 @@ class Api::UsersController < ApplicationController
   end
   private
   def user_params
-    params.require(:user).permit(:name, :email, :location)
+    params.require(:user).permit(:name, :email, :password, :location)
   end
 end
