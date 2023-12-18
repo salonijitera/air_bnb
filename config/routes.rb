@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   namespace :api, defaults: {format: :json} do
     resources :users, only: [:create, :index, :show] do
       get 'vip_status', on: :member
+      post 'create', on: :collection
     end
     resources :listings, only: [:show, :index]
     resources :reviews, only: [:index]

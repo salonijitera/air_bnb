@@ -20,5 +20,10 @@ class NotificationService
     # Assuming we have a mailer setup
     UserMailer.with(user: @user, premium_listing: premium_listing, notification: notification).premium_listing_creation_notification_email.deliver_later
   end
+  def send_confirmation_email(email)
+    raise 'Invalid email' unless email.is_a?(String)
+    UserMailer.with(user: @user).confirmation_email.deliver_later
+    return 'Email sent successfully'
+  end
   # ... rest of the class
 end
